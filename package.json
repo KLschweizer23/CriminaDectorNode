@@ -1,0 +1,31 @@
+{
+  "name": "criminadector",
+  "version": "1.0.0",
+  "description": "Web app to detect wanted criminals",
+  "main": "index.js",
+  "scripts": {
+    "devStart": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "blob": "^0.1.0",
+    "canvas": "^2.10.2",
+    "create-html-element": "^4.0.1",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "face-api.js": "^0.22.2",
+    "fetch": "^1.1.0",
+    "js-create-element": "^1.2.4",
+    "jsdom": "^20.0.3",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.0",
+    "promise": "^8.3.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3",
+    "nodemon": "^2.0.20"
+  }
+}

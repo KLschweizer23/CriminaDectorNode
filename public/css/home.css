@@ -1,0 +1,43 @@
+@media (max-width:525px) {
+    h2{
+        font-size:100%
+    }
+}
+h2{
+    color:white;
+}
+
+body{
+    background-color:rgb(52, 63, 75);
+}
+div.divider{
+    border-right:1px dashed rgb(49, 49, 49);
+}
+div.maincontainer{
+    margin:35px;
+    border-radius: 10px;
+}
+table.tblhome{
+
+    width: 100%;
+}
+tr.trhome{
+    border-bottom:1px dashed rgb(49, 49, 49);
+    border-top:1px dashed rgb(49, 49, 49);
+}
+td.profileimg{
+    width:20%
+}
+p{
+    color:white;
+    font-size: 125%;
+}
+img.recentact{
+    width:25px;margin:5px;float:left
+}
+img.profilepicture{
+    width: 100px;margin:15px;border:1px solid black;
+}
+img.profilepage{
+    width: 100%;border:1px solid black
+}
