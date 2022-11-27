@@ -77,10 +77,40 @@ app.get('/dashboard', (req, res) => {
 })
 
 app.post('/upload-descriptor', express.json(), (req, res) => {
-    //console.log(req.body.descriptor)
-    console.log(req.body)
+    console.log(req.body.descriptor)
+    
+    var crimDir = CRIMINAL_DIR + '/' + req.body.name
+    if(!fs.existsSync(crimDir)){
+        fs.mkdirSync(crimDir)
+    }
+    if(!fs.existsSync(crimDir + '/descriptor')){
+        fs.mkdirSync(crimDir + '/descriptor')
+    }
+    crimDir = crimDir + '/descriptor'
+    var descriptor = ''
+    for(let i = 0; i < 128; i++){
+        if(i == 0){
+            descriptor = req.body.descriptor[i]
+            continue
+        }
+        descriptor += ',' + req.body.descriptor[i] 
+    }
+
+    var files = fs.readdirSync(crimDir, (err, files) => {
+        return files.length
+    })
+
+    fs.writeFileSync(crimDir + '/' + (files.length + 1) + ".txt", descriptor)
+
     res.send(JSON.stringify({message: 'RECEIVED'}))
 })
+
+async function sample(label, descriptors){
+    const descriptions = []
+    descriptions.push(descriptors)
+    console.log(await faceapi.LabeledFaceDescriptors(label, new Float32Array(descriptions)))
+}
+
 app.post('/upload', (req, res) => {
     upload(req,res,function(err) {
         if(err) {
@@ -101,11 +131,12 @@ async function processImages() {
             console.log(label)
             for(let i=1; i<=2; i++) {
                 
-                // const img_c = (await canvas.loadImage('./public/labeled_images/' + label + '/' + i + '.jpg')).src
+                //const img_c = (await canvas.loadImage('./public/labeled_images/' + label + '/' + i + '.jpg')).src
                 //const img = await canvas.loadImage(`./public/labeled_images/${label}/${i}.jpg`)
                 // console.log(imge_c)
-                const img = await faceapi.fetchImage(`./public/labeled_images/${label}/${i}.jpg`)
+                //const img = await faceapi.fetchImage(`./public/labeled_images/${label}/${i}.jpg`)
                 const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+                faceapi.computeFaceDescriptor()
                 console.log(detections)
                 descriptions.push(new Float32Array(detections.descriptor))
             }

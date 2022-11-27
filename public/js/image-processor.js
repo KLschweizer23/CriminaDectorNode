@@ -34,13 +34,13 @@ async function makeImageDescription(){
 
     const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
     const descriptor = await detection.descriptor
-    console.log(await descriptor)
 
     await fetch("/upload-descriptor", {
         method: "POST",
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-            descriptor: descriptor
+            descriptor: descriptor,
+            name: name
         })
     }).then((response) => response.json())
     .then((data) => {
