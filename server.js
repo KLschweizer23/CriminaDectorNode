@@ -8,9 +8,6 @@ const app = express()
 
 
 app.use(express.static(__dirname + '/public'))
-// app.use(express.json({
-//     type: "*/*"
-// }))
 
 app.set('view-engine', 'ejs')
 
@@ -21,7 +18,7 @@ Promise.all([
 ])
 
 const maxSize = 1 * 1000 * 1000
-const CRIMINAL_DIR = './criminals'
+const CRIMINAL_DIR = './public/criminals'
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -29,14 +26,10 @@ var storage = multer.diskStorage({
         if(!fs.existsSync(crimDir)){
             fs.mkdirSync(crimDir)
         }
-        if(!fs.existsSync(crimDir + '/picture')){
-            fs.mkdirSync(crimDir + '/picture')
-        }
-        crimDir = crimDir + '/picture'
         cb(null, crimDir)
     },
     filename: function (req, file, cb) {
-        var crimDir = CRIMINAL_DIR + '/' + req.query.crim + '/picture'
+        var crimDir = CRIMINAL_DIR + '/' + req.query.crim
         var files = fs.readdirSync(crimDir, (err, files) => {
             return files.length
         })
@@ -76,35 +69,6 @@ app.get('/dashboard', (req, res) => {
     res.render('pages/dashboard.ejs')
 })
 
-app.post('/upload-descriptor', express.json(), (req, res) => {
-    console.log(req.body.descriptor)
-    
-    var crimDir = CRIMINAL_DIR + '/' + req.body.name
-    if(!fs.existsSync(crimDir)){
-        fs.mkdirSync(crimDir)
-    }
-    if(!fs.existsSync(crimDir + '/descriptor')){
-        fs.mkdirSync(crimDir + '/descriptor')
-    }
-    crimDir = crimDir + '/descriptor'
-    var descriptor = ''
-    for(let i = 0; i < 128; i++){
-        if(i == 0){
-            descriptor = req.body.descriptor[i]
-            continue
-        }
-        descriptor += ',' + req.body.descriptor[i] 
-    }
-
-    var files = fs.readdirSync(crimDir, (err, files) => {
-        return files.length
-    })
-
-    fs.writeFileSync(crimDir + '/' + (files.length + 1) + ".txt", descriptor)
-
-    res.send(JSON.stringify({message: 'RECEIVED'}))
-})
-
 async function sample(label, descriptors){
     const descriptions = []
     descriptions.push(descriptors)
@@ -122,27 +86,22 @@ app.post('/upload', (req, res) => {
     })
 })
 
-async function processImages() {
-    //const labels = ['Black Widow', 'Captain America', 'Hawkeye' , 'Jim Rhodes', 'Tony Stark', 'Thor', 'Captain Marvel']
-    const labels = ['KL'] // for WebCam
-    return Promise.all(
-        labels.map(async(label)=>{
-            const descriptions = []
-            console.log(label)
-            for(let i=1; i<=2; i++) {
-                
-                //const img_c = (await canvas.loadImage('./public/labeled_images/' + label + '/' + i + '.jpg')).src
-                //const img = await canvas.loadImage(`./public/labeled_images/${label}/${i}.jpg`)
-                // console.log(imge_c)
-                //const img = await faceapi.fetchImage(`./public/labeled_images/${label}/${i}.jpg`)
-                const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-                faceapi.computeFaceDescriptor()
-                console.log(detections)
-                descriptions.push(new Float32Array(detections.descriptor))
-            }
-            return new faceapi.LabeledFaceDescriptors(label, descriptions)
+app.get('/get-all-criminals', (req, res) => {
+    var returnObject = []
+    var crimDir = CRIMINAL_DIR
+    var files = fs.readdirSync(crimDir, (err, files) => {
+        return files
+    })
+    files.forEach((folder) => {
+        var obj = {}
+        obj['name'] = folder
+        var pictures = fs.readdirSync(crimDir + '/' + folder, (err, files) => {
+            return files
         })
-    )
-}
+        obj['picSize'] = pictures.length
+        returnObject.push(obj)
+    })
+    res.send(returnObject)
+})
 
 app.listen(3000)

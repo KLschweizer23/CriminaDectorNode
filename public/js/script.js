@@ -23,7 +23,6 @@ function start() {
             err => console.error(err)
         )
             
-            //video.src = '../videos/speech.mp4'
             console.log('video added')
             recognizeFaces()
     }
@@ -31,11 +30,22 @@ function start() {
 function findWord(word, str) {
     return str.split('/').some(function(w){return w === word})
 }
+$('#myform').on('submit', ()=> {
+    if($('#image').val() == '') return false
+    
+    var name = document.getElementById('name').value
+
+    document.getElementById("myform").action = "/upload?crim=" + name
+    return true
+})
 async function recognizeFaces() {
 
     const labeledDescriptors = await loadLabeledImages()
-    console.log(labeledDescriptors)
-    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.7)
+    if(labeledDescriptors == null){
+        alert('No Criminals added to the database!')
+        return
+    }
+    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.51)
 
 
     //pag ma play
@@ -55,26 +65,34 @@ async function recognizeFaces() {
             console.log(faceMatcher.findBestMatch(d.descriptor).toString())
             return faceMatcher.findBestMatch(d.descriptor)
         })
+        //displayResults(results)
     })
     // video.addEventListener('play', async () => {
     // })
 }
-
+function displayResults(results){
+    results.forEach( (result, i) => {
+        console.log(result.toString())
+    })
+}
 //load images
-function loadLabeledImages() {
-    //const labels = ['Black Widow', 'Captain America', 'Hawkeye' , 'Jim Rhodes', 'Tony Stark', 'Thor', 'Captain Marvel']
-    const labels = ['KL'] // for WebCam
+async function loadLabeledImages() {
+    const criminals = await $.get('/get-all-criminals', async (data) => {
+        console.log(await data)
+        return data;
+    })
+    if(criminals.length == 0)
+        return null
+    
     return Promise.all(
-        labels.map(async (label)=>{
+        criminals.map(async (criminal)=>{
             const descriptions = []
-            for(let i=1; i<=2; i++) {
-                const img = await faceapi.fetchImage(`../labeled_images/${label}/${i}.jpg`)
+            for(let i=1; i<=criminal['picSize']; i++) {
+                const img = await faceapi.fetchImage(`../criminals/${criminal.name}/${i}.jpg`)
                 const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-                console.log(label + i + JSON.stringify(detections))
                 descriptions.push(detections.descriptor)
             }
-            console.log(descriptions)
-            return new faceapi.LabeledFaceDescriptors(label, descriptions)
+            return new faceapi.LabeledFaceDescriptors(criminal.name, descriptions)
         })
     )
 }
