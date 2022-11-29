@@ -1,49 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include('../partials/head') %>
-  <body>
-    <header>
-        <%- include('../partials/header') %>
-        <style>
-            body {
-                margin: 0;
-                padding: 0;
-                width: 100vw;
-                height: 100vh;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-            }
-            canvas{
-                position: absolute;
-            }
-        </style>
-    </header>
-    <main>
-        <button id="videoStarter" class="btn btn-success">Start</button>
-        <div id="container" class="video-container">
-            <video class="border" id="videoInput" width="720" height="550" muted autoplay>
-        </div>
-        <form id="myform" action="/upload" method="POST" enctype="multipart/form-data">
-            <input type="text" id="name" required>
-          <input id="image" type="file" name="image" onchange="loadFile(event)"/>
-          <button type="submit">Upload</button>
-            <div class="text-center m-0 p-0 mt-2">
-                <img id="output" style="width: 400px;"/>
+    <head>
+        <%- include('../partials/head') %>
+        <title>Dashboard - CriminaDector</title>
+    </head>
+    <body>
+        <header>
+            <script defer async src="js/face-api.min.js"></script>
+            <%- include('../partials/header') %>
+        </header>
+        <main>
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="face-tab" data-toggle="tab" data-target="#face" type="button"
+                        role="tab" aria-controls="home" aria-selected="true"
+                        style="background-color:rgb(52, 63, 75);color:white;border-bottom:1px white solid;">Face
+                        Recognition</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-toggle="tab" data-target="#settings" type="button"
+                        role="tab" aria-controls="profile" aria-selected="false"
+                        style="background-color:rgb(52, 63, 75);color:white;border-bottom:1px white solid;">Settings</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active text-center" id="face" role="tabpanel" aria-labelledby="face-tab">
+                    <div id="container" class="video-container">
+                        <div class="text-left p-3 w-50">
+                            <h3 class="text-white" style="display: inline-block; margin-right: 10px;">Best Result:</h3>
+                            <button id="videoStarter" class="btn btn-primary" style="display: inline-block">Detect Face</button>
+                            <p id="result" class="text-white">None - 0%</p>
+                        </div>
+                        <video class="border" id="videoInput" width="720" height="550" muted autoplay>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                    <div class="p-5 m-3">
+                        <h2 class="text-white">Settings</h2>
+                        <hr>
+                        <h4 class="text-white">Load Models</h3>
+                        <p class="text-white" style="display: inline-block;margin-right: 30px; ">Load models automatically on next reload</p>
+                        <input id="toggle-event" type="checkbox" checked data-toggle="toggle" data-onstyle="secondary" style="display: inline-block;" data-size="sm" data-on="Yes" data-off="No">
+                        
+                        <hr>
+                        <h4 class="text-white">Wanted Criminals</h3>
+                        <button class="btn btn-primary" data-toggle="modal"
+                            data-target="#addCriminalModal">Add</button>
+                        <table class="table table-dark">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Sex</th>
+                                    <th scope="col">Description</th>
+                                    <th scope="col">Last Seen</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% for (var i = 0; i < criminals.length; i++){ %>
+                                    <tr>
+                                        <th scope="row"><%= i + 1 %></th>
+                                        <td><%= criminals[i].person.name %></td>
+                                        <td><%= criminals[i].person.sex %></td>
+                                        <td><%= criminals[i].description %></td>
+                                        <td><%= criminals[i].lastSeen %></td>
+                                        <td>
+                                            <button id="<%= criminals[i].id %>" class="btn btn-success" data-toggle="modal" onclick="editRow(id)">Edit</button>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <script>
-                var loadFile = function(event) {
-                    var output = document.getElementById('output');
-                    output.src = URL.createObjectURL(event.target.files[0]);
-                    output.onload = function() {
-                        URL.revokeObjectURL(output.src) // free memory
-                    }
-                };
-            </script>
-        </form>
-        <script defer async src="js/face-api.min.js"></script>
-        <script defer async src="js/script.js"></script>
-    </main>
-  </body>
+
+
+            <!-- add popup -->
+            <div class="modal fade" id="addCriminalModal" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content" style="background-color:rgb(52, 63, 75);">
+                        <form id="myform" action="/upload" method="POST" enctype="multipart/form-data">
+                            <div class="modal-header">
+                                <h5 class="modal-title text-white" id="exampleModalLongTitle">Add new data</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                    <label class="text-white" for="crim_name">Name: &nbsp</label>
+                                    <input id="crim_name" type="text" placeholder="Name" name="crimname" required>
+                                    <br>
+                                    <label class="text-white" for="crim_sex">Sex: &nbsp</label>
+                                    <input id="crim_sex" type="radio" name="crim_sex" value="male" required checked>
+                                    <label class="text-white" for="male" checked>Male</label>
+                                    <input id="crim_sex" type="radio" name="crim_sex" value="female" required>
+                                    <label class="text-white" for="female">Female</label>
+                                    <br>
+                                    <label class="text-white" for="crim_description">Description: &nbsp</label>
+                                    <input id="crim_description" type="text" placeholder="Description" name="crimdescription" required>
+                                    <br>
+                                    <label class="text-white" for="crim_lastSeen">Last seen: &nbsp</label>
+                                    <input id="crim_lastSeen" type="text" placeholder="Last seen" name="crimlastseen" required>
+                                    <br>
+                                    <input class="text-white" id="image" type="file" name="image" onchange="loadFile(event)" />
+                                    <div class="text-center m-0 p-0 mt-2">
+                                        <img id="output" style="width: 400px;" />
+                                    </div>
+                                    <script>
+                                        var loadFile = function (event) {
+                                            var output = document.getElementById('output');
+                                            output.src = URL.createObjectURL(event.target.files[0]);
+                                            output.onload = function () {
+                                                URL.revokeObjectURL(output.src) // free memory
+                                            }
+                                        };
+                                    </script>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Add Criminal</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editCriminalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content" style="background-color:rgb(52, 63, 75);">
+                        <form id="myform_edit" action="/upload" method="POST" enctype="multipart/form-data">
+                            <div class="modal-header">
+                                <h5 class="modal-title text-white" id="exampleModalLongTitle">Edit data</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                    <label class="text-white" for="crim_name">Name: &nbsp</label>
+                                    <input id="crim_name_edit" type="text" placeholder="Name" name="crimname" required>
+                                    <br>
+                                    <label class="text-white" for="crim_sex">Sex: &nbsp</label>
+                                    <input id="crim_sex_edit" type="radio" name="crim_sex" value="male" required checked>
+                                    <label class="text-white" for="male" checked>Male</label>
+                                    <input id="crim_sex_edit" type="radio" name="crim_sex" value="female" required>
+                                    <label class="text-white" for="female">Female</label>
+                                    <br>
+                                    <label class="text-white" for="crim_description">Description: &nbsp</label>
+                                    <input id="crim_description_edit" type="text" placeholder="Description" name="crimdescription" required>
+                                    <br>
+                                    <label class="text-white" for="crim_lastSeen">Last seen: &nbsp</label>
+                                    <input id="crim_lastSeen_edit" type="text" placeholder="Last seen" name="crimlastseen" required>
+                                    <br>
+                                    <label class="text-white" for="image">Add more image</label>
+                                    <input class="text-white" id="image_edit" type="file" name="image" onchange="loadFileEdit(event)" />
+                                    <div class="text-center m-0 p-0 mt-2">
+                                        <img id="output_edit" style="width: 400px;" />
+                                    </div>
+                                    <script>
+                                        var loadFileEdit = function (event) {
+                                            var output_edit = document.getElementById('output_edit');
+                                            output_edit.src = URL.createObjectURL(event.target.files[0]);
+                                            output_edit.onload = function () {
+                                                URL.revokeObjectURL(output.src) // free memory
+                                            }
+                                        };
+                                    </script>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Save changes</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Loading Modal -->
+            <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content text-center p-3 bg-white">
+                        <div class="text-center w-25 mx-auto">
+                            <div class="loader"></div>
+                        </div>
+                        <h3 class="text-dark">Loading Models . . .</h3>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+    <script defer async src="js/script.js"></script>
 </html>

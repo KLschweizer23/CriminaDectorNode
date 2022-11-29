@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^4.6.1",
+    "@tensorflow/tfjs-node": "^4.1.0",
+    "@tensorflow/tfjs-node-gpu": "^4.1.0",
     "bcrypt": "^5.1.0",
     "blob": "^0.1.0",
     "canvas": "^2.10.2",
@@ -26,6 +29,7 @@
   },
   "devDependencies": {
     "dotenv": "^16.0.3",
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "prisma": "^4.6.1"
   }
 }
