@@ -1,0 +1,2 @@
+STATUS=false
+AUTO_DETECT=false

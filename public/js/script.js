@@ -5,6 +5,8 @@ window.onerror = function() {
 const video = document.getElementById('videoInput')
 const button = document.getElementById('videoStarter')
 
+var automateDetection = false
+
 $('#loadingModal').modal({ show: true });
 Promise.all([
     faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
@@ -14,7 +16,8 @@ Promise.all([
 
 async function start() {
     $('#loadingModal').modal({ show: true });
-    if(await checkIfLoadModels() ){        
+    enableAutomaticDetection()
+    if(await checkIfLoadModels()){
         navigator.getUserMedia(
             { video:{} },
             stream => video.srcObject = stream,
@@ -26,17 +29,37 @@ async function start() {
     }
 }
 
+async function enableAutomaticDetection(){
+    var automate = await $.get('/automate', async (data) => {
+        return await data
+    })
+    if(automate.automate){
+        $('#videoStarter').hide()
+        $('#toggle-event-automate').bootstrapToggle('on')
+    }else{
+        $('#toggle-event-automate').bootstrapToggle('off')
+    }
+    $('#toggle-event-automate').change(function() {
+        var status = document.getElementById('toggle-event-automate').checked
+        $.get('/automate?value=' + status)
+    })
+    automateDetection = automate.automate
+}
+
 async function checkIfLoadModels(){
     var status = await $.get('/status', async (data) => {
-        return await data;
+        return await data
     })
-    console.log(status.status)
     if(!status.status){
         $('#loadingModal').modal('hide')
         $('#videoStarter').hide()
         $('#result').text('Enable automatic loading of models in the settings')
         $('#toggle-event').bootstrapToggle('off');
     }
+    $('#toggle-event').change(function() {
+        var status = document.getElementById('toggle-event').checked
+        $.get('/status?value=' + status)
+    })
     return status.status
 }
 
@@ -51,11 +74,6 @@ async function editRow(id){
     $('#crim_lastSeen_edit').val(criminal.lastSeen)
     $('#editCriminalModal').modal({ show: true });
 }
-
-$('#toggle-event').change(function() {
-    var status = document.getElementById('toggle-event').checked
-    $.get('/status?value=' + status)
-})
 $('#myform').on('submit', ()=> {
     if($('#image').val() == '') return false
     
@@ -87,53 +105,117 @@ async function recognizeFaces() {
     }
     const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55)
     
-    button.addEventListener('click', async() => {
-        document.getElementById('result').innerHTML = 'Processing . . .'
-        console.log('Playing')
+    if(automateDetection){
         const canvas = faceapi.createCanvasFromMedia(video)
         document.getElementById('container').append(canvas)
 
         const displaySize = { width: video.width, height: video.height }
         faceapi.matchDimensions(canvas, displaySize)
+        var readyForDetection = true
+        const interval = setInterval(async () =>{
+            if(readyForDetection){
+                console.log('still here')
+                document.getElementById('result').innerHTML = 'Ready'
 
-        var bestData = {}
-        for(let i = 0; i < 10; i++){
-            const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
-            if(detections == null){
+                const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
+                setTimeout(() => {console.log('Process detection')}, 300)
+                if(await detections != null){
+                    readyForDetection = false   
+                    console.log('Detected Something')
+                    document.getElementById('result').innerHTML = 'Processing . . .'
+                    var bestData = {}
+                    var errorMargin = 0
+                    for(let i = 0; i < 10; i++){
+                        const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
+                        if(detections == null){
+                            errorMargin += 1
+                            if(errorMargin == 3){
+                                document.getElementById('result').innerHTML = 'No face detected or Detection was interrupted!'
+                                readyForDetection = true
+                                return
+                            }
+                            continue
+                        }
+                        const resizedDetections = faceapi.resizeResults(detections, displaySize)
+                        
+                        var bestMatch = faceMatcher.findBestMatch(resizedDetections.descriptor)
+                        if(bestData[bestMatch.label] == null){
+                            bestData[bestMatch.label] = 1
+                        }else{
+                            bestData[bestMatch.label] += 1
+                        }
+                    }
+                    var bestKey = ''
+                    for(const key in bestData){
+                        if(bestKey == ''){
+                            bestKey = key
+                            continue
+                        }
+                        if(bestData[bestKey] < bestData[key]){
+                            bestKey = key
+                        }
+                    }
+                    if(bestKey == 'unknown'){
+                        document.getElementById('result').innerHTML = 'No record found!'
+                    }else{
+                        document.getElementById('result').innerHTML = bestKey + ' (' + ((bestData[bestKey] / 10) * 100) + '%)'
+                    }
+                    setTimeout(() => {
+                        console.log('SHOW RESULT WAIT TIME')
+                        readyForDetection = true
+                    }, 3000)
+                }
+            }
+        }, 500)
+    }else{
+        button.addEventListener('click', async() => {
+            console.log('Playing')
+            const canvas = faceapi.createCanvasFromMedia(video)
+            document.getElementById('container').append(canvas)
+            
+            const displaySize = { width: video.width, height: video.height }
+            faceapi.matchDimensions(canvas, displaySize)
+            processDetection(faceMatcher, displaySize)
+        })
+    }
+}
+async function processDetection(faceMatcher, displaySize){
+    document.getElementById('result').innerHTML = 'Processing . . .'
+    var bestData = {}
+    var errorMargin = 0
+    for(let i = 0; i < 10; i++){
+        const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor()
+        if(detections == null){
+            errorMargin += 1
+            if(errorMargin == 3){
                 document.getElementById('result').innerHTML = 'No face detected or Detection was interrupted!'
                 return
             }
-            const resizedDetections = faceapi.resizeResults(detections, displaySize)
+        }
+        const resizedDetections = faceapi.resizeResults(detections, displaySize)
 
-            var bestMatch = faceMatcher.findBestMatch(resizedDetections.descriptor)
-            if(bestData[bestMatch.label] == null){
-                bestData[bestMatch.label] = 1
-            }else{
-                bestData[bestMatch.label] += 1
-            }
+        var bestMatch = faceMatcher.findBestMatch(resizedDetections.descriptor)
+        if(bestData[bestMatch.label] == null){
+            bestData[bestMatch.label] = 1
+        }else{
+            bestData[bestMatch.label] += 1
         }
-        console.log(bestData)
-        var bestKey = ''
-        for(const key in bestData){
-            if(bestKey == ''){
-                bestKey = key
-                continue
-            }
-            if(bestData[bestKey] < bestData[key]){
-                bestKey = key
-            }
+    }
+    var bestKey = ''
+    for(const key in bestData){
+        if(bestKey == ''){
+            bestKey = key
+            continue
         }
-        if(bestKey == 'unknown'){
-            document.getElementById('result').innerHTML = 'No record found!'
-            return
+        if(bestData[bestKey] < bestData[key]){
+            bestKey = key
         }
-        document.getElementById('result').innerHTML = bestKey + ' (' + ((bestData[bestKey] / 10) * 100) + '%)'
-    })
-}
-function displayResults(results){
-    results.forEach( (result, i) => {
-        console.log(result.toString())
-    })
+    }
+    if(bestKey == 'unknown'){
+        document.getElementById('result').innerHTML = 'No record found!'
+        return
+    }
+    document.getElementById('result').innerHTML = bestKey + ' (' + ((bestData[bestKey] / 10) * 100) + '%)'
 }
 //load images
 async function loadLabeledImages() {

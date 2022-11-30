@@ -1,5 +1,10 @@
+if(process.env.NODE_ENV !== 'production'){
+    require('dotenv').config()
+}
+
 const express = require('express')
 const fs = require('fs')
+const os = require('os')
 const bcrypt = require('bcrypt')
 const faceapi = require('face-api.js')
 const tf = require('@tensorflow/tfjs-node')
@@ -8,11 +13,40 @@ const path = require('path')
 var multer = require('multer')
 const { PrismaClient } = require('@prisma/client')
 
+const passport = require('passport')
+const flash = require('express-flash')
+const session = require('express-session')
+
 const prisma = new PrismaClient()
 const app = express()
-
+const initializePassport = require('./passport-config')
+initializePassport(
+    passport,
+    async badge => {
+        const findPolice = await prisma.police.findUnique({
+            where:{
+                badge: badge
+            }
+        })
+    },
+    async id => {
+        const findPolice = await prisma.police.findUnique({
+            where:{
+                id: id
+            }
+        })
+    }
+)
 
 app.use(express.static(__dirname + '/public'))
+app.use(flash())
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave:false,
+    saveUninitialized: false
+}))
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.set('view-engine', 'ejs')
 
@@ -66,38 +100,30 @@ var storage = multer.diskStorage({
 }).single("image");  
 
 app.get('/', async (req, res) => {
-
-    res.render('pages/index.ejs')
+    res.render('pages/index.ejs', {'authenticated': req.isAuthenticated()})
 })
 
-app.get('/dashboard', async (req, res) => {
-    if(!fs.existsSync('status.txt')){
-        fs.writeFileSync('status.txt', 'true')
-    }
+app.get('/dashboard', checkAuthenticated, async (req, res) => {
     const criminals = await getCriminals()
-    res.render('pages/dashboard.ejs', {'criminals': await criminals})
+    res.render('pages/dashboard.ejs', {'criminals': await criminals, 'authenticated': req.isAuthenticated()})
 })
 
-app.get('/login', async (req, res) => {
-    res.render('pages/login.ejs')
+app.get('/login', checkNotAuthenticated, async (req, res) => {
+    res.render('pages/login.ejs', {'authenticated': req.isAuthenticated()})
 })
 
-app.post('/login', express.json(), express.urlencoded(), async (req, res) => {
-    await policeExist(req.body)
-    .then(async (response) => {
-        if(response == 'none'){
-            res.send('Police Doesn\'t exist')
-        }else if(response == 'bad password'){
-            res.send('Wrong password')
-        }else{
-            res.redirect('/dashboard')
+app.post('/login', express.json(), express.urlencoded(), checkNotAuthenticated, passport.authenticate('local', {
+    successRedirect: '/dashboard',
+    failureRedirect: '/login',
+    failureFlash: true
+}))
+
+app.post('/logout', (req, res) => {
+    req.logOut((err) => {
+        if(err){
+            return next(err)
         }
-        await prisma.$disconnect()
-    })
-    .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
+        res.redirect('/login')
     })
 })
 
@@ -116,13 +142,20 @@ app.post('/register', express.json(), express.urlencoded(), async (req, res) => 
 
 app.get('/status', (req, res) => {
     var value = req.query.value
-    if(!fs.existsSync('status.txt')){
-        fs.writeFileSync('status.txt', 'true')
-    }
     if(value == null){
-        res.send({status: fs.readFileSync('status.txt').equals(Buffer.from('true'))})
+        res.send({status: getSettingsValues("STATUS") === 'true'})
     }else{
-        fs.writeFileSync('status.txt', value)
+        setSettingsValues("STATUS", value)
+        res.end()
+    }
+})
+app.get('/automate', (req, res) => {
+    var value = req.query.value
+    if(value == null){
+        res.send({automate: getSettingsValues("AUTO_DETECT") === 'true'})
+    }else{
+        setSettingsValues("AUTO_DETECT", value)
+        res.end()
     }
 })
 
@@ -131,12 +164,11 @@ app.post('/upload', (req, res) => {
     .then(async () => {
         await prisma.$disconnect()
         upload(req,res,function(err) {
-            console.log(req.file)
             if(err) {
                 res.send(err)
             }
             else {
-                res.location('/dashboard')
+                res.redirect('/dashboard')
             }
         })
     })
@@ -145,6 +177,24 @@ app.post('/upload', (req, res) => {
         await prisma.$disconnect()
         process.exit(1)
     })
+})
+
+app.post('/delete', (req, res) => {
+    var id = req.query.id
+    deleteCriminal(id)
+    .then(async (person) => {
+        await prisma.$disconnect()
+        if(fs.existsSync(CRIMINAL_DIR + '/' + person.name)){
+            fs.rmSync(CRIMINAL_DIR + '/' + person.name, { recursive: true, force: true })
+        }
+        res.redirect('/dashboard')
+    })
+    .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+        process.exit(1)
+    })
+
 })
 
 app.get('/get-all-criminals', (req, res) => {
@@ -168,25 +218,6 @@ app.get('/get-all-criminals', (req, res) => {
 app.get('/criminal-record', async (req, res) => {
     res.send(await getSpecificCriminal(req.query.c_id))
 })
-
-async function policeExist(data){
-    var userExists = await prisma.police.findUnique({
-        where:{
-            badge: data.badge
-        },
-        select:{
-            password: true
-        }
-    })
-    if(!userExists){
-        return 'none'
-    }
-    var checkPassword = await bcrypt.compareSync(data.password, userExists.password)
-    if(checkPassword){
-        return 'good'
-    }
-    return 'bad password'
-}
 
 async function savePolice(data, update){
     var updateValue = 0
@@ -278,6 +309,58 @@ async function saveCriminal(req){
             id: updateValue
         }
     })
+}
+
+async function deleteCriminal(id){
+    var criminal = await prisma.criminal.delete({
+        where: {
+            id: Number(id)
+        }
+    })
+
+    return await prisma.person.delete({
+        where: {
+            id: criminal.personId
+        }
+    })
+}
+
+function checkAuthenticated(req, res, next) {
+    if(req.isAuthenticated()){
+        return next()
+    }
+
+    res.redirect('/login')
+}
+
+function checkNotAuthenticated(req, res, next){
+    if(req.isAuthenticated()){
+        return res.redirect('/dashboard')
+    }
+    next()
+}
+
+function setSettingsValues(key, value) {
+    var variables = fs.readFileSync('./settings.txt', 'utf8').split("\n")
+    for(let i = 0; i < variables.length; i++){
+        var key_value = variables[i].split("=")
+        if(key_value[0] == key){
+            key_value[1] = value
+            variables[i] = key_value[0] + "=" + key_value[1]
+        }
+    }
+    fs.writeFileSync('./settings.txt', variables.join("\n"))
+}
+
+function getSettingsValues(key){
+    var variables = fs.readFileSync('./settings.txt', 'utf8').split("\n")
+    for(let i = 0; i < variables.length; i++){
+        var key_value = variables[i].split("=")
+        if(key_value[0] == key){
+            return key_value[1]
+        }
+    }
+    return null
 }
 
 app.listen(3000)

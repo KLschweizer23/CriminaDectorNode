@@ -40,11 +40,13 @@
                     <div class="p-5 m-3">
                         <h2 class="text-white">Settings</h2>
                         <hr>
-                        <h4 class="text-white">Load Models</h3>
                         <p class="text-white" style="display: inline-block;margin-right: 30px; ">Load models automatically on next reload</p>
                         <input id="toggle-event" type="checkbox" checked data-toggle="toggle" data-onstyle="secondary" style="display: inline-block;" data-size="sm" data-on="Yes" data-off="No">
-                        
+                        <br>
+                        <p class="text-white" style="display: inline-block;margin-right: 30px; ">Enable Automatic Detection on next reload</p>
+                        <input id="toggle-event-automate" type="checkbox" checked data-toggle="toggle" data-onstyle="secondary" style="display: inline-block;" data-size="sm" data-on="Yes" data-off="No">
                         <hr>
+                        
                         <h4 class="text-white">Wanted Criminals</h3>
                         <button class="btn btn-primary" data-toggle="modal"
                             data-target="#addCriminalModal">Add</button>
@@ -69,6 +71,9 @@
                                         <td><%= criminals[i].lastSeen %></td>
                                         <td>
                                             <button id="<%= criminals[i].id %>" class="btn btn-success" data-toggle="modal" onclick="editRow(id)">Edit</button>
+                                            <form action="/delete?id=<%= criminals[i].id %>" method="post">
+                                                <button id="<%= criminals[i].id %>" class="btn btn-danger">Delete</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 <% } %>

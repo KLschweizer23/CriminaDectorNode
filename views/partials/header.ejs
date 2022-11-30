@@ -7,14 +7,14 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="ml-auto">
-        <a href="/dashboard"><button class="btn btn-secondary">Dashboard</button></a>
 
-        <!-- add Some conditional statements here -->
-        <button class="btn btn-primary">
-            <a href="/login" style = "color:white;">Login</a>
-        </button>
-        <form style="display: inline;" action="/logout" method="POST">
-            <button type="submit" class="btn btn-primary">Logout</button>
-        </form>
+        <% if(authenticated){%>
+            <a href="/dashboard"><button class="btn btn-secondary">Dashboard</button></a>
+            <form style="display: inline;" action="/logout" method="POST">
+                <button type="submit" class="btn btn-danger">Logout</button>
+            </form>
+        <% } else {%>
+            <a href="/login"><button class="btn btn-primary">Login</button></a>
+        <% } %>
     </div>
 </nav>
