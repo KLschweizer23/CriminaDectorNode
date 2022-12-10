@@ -1,2 +1,2 @@
-STATUS=false
+STATUS=true
 AUTO_DETECT=false

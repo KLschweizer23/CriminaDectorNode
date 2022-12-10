@@ -12,6 +12,7 @@ const Promise = require('promise')
 const path = require('path')
 var multer = require('multer')
 const { PrismaClient } = require('@prisma/client')
+const mysql = require('mysql2')
 
 const passport = require('passport')
 const flash = require('express-flash')
@@ -20,6 +21,7 @@ const session = require('express-session')
 const prisma = new PrismaClient()
 const app = express()
 const initializePassport = require('./passport-config')
+const { data } = require('@tensorflow/tfjs-node')
 initializePassport(
     passport,
     async badge => {
@@ -99,30 +101,95 @@ var storage = multer.diskStorage({
 // mypic is the name of file attribute
 }).single("image");  
 
+const pool = mysql.createPool({
+    host: "sql.freedb.tech",
+    user: "freedb_police_user",
+    password: "9#VMNfVRugDtc&w",
+    database: "freedb_criminadector_node"
+})
+
+pool.getConnection((err, con) => {
+    if(err) console.log(err)
+    console.log('Connected successfully')
+})
+
 app.get('/', async (req, res) => {
-    res.render('pages/index.ejs', {'authenticated': req.isAuthenticated()})
+    const logs = await getCriminalLogs()
+    res.render('pages/index.ejs', {'authenticated': req.isAuthenticated(), 'logs': await logs})
 })
 
 app.get('/dashboard', checkAuthenticated, async (req, res) => {
     const criminals = await getCriminals()
-    res.render('pages/dashboard.ejs', {'criminals': await criminals, 'authenticated': req.isAuthenticated()})
+    const logs = await getCriminalLogs()
+    const activities = await getActivityLogs()
+    res.render('pages/dashboard.ejs', {
+        'criminals': await criminals,
+        'authenticated': req.isAuthenticated(),
+        'criminalLogs': await logs,
+        'activityLogs': await activities
+    })
 })
 
 app.get('/login', checkNotAuthenticated, async (req, res) => {
     res.render('pages/login.ejs', {'authenticated': req.isAuthenticated()})
 })
 
-app.post('/login', express.json(), express.urlencoded(), checkNotAuthenticated, passport.authenticate('local', {
+function removeWord(arr, word) {
+    for (var i = 0; i < arr.length; i++){
+        arr[i] = arr[i].replace(word,'');
+    }
+}
+
+app.get('/criminal/:id', checkAuthenticated, async (req, res) => {
+    var criminal = await getCriminal(req.params.id)
+    var pics = []
+    var pictures = await fs.readdirSync(CRIMINAL_DIR + '/' + criminal.person.name, async (err, files) => {
+        return await files
+    })
+    removeWord(pictures, ".jpg")
+    for(var i = 0; i < pictures.length; i++){
+        var pic = {}
+        pic['name'] = criminal.person.name
+        pic['id'] = pictures[i]
+        pics.push(pic)
+    }
+    res.render('pages/criminal.ejs', {
+        'authenticated': req.isAuthenticated(),
+        'criminal': criminal,
+        'pictures': pics
+    })
+})
+
+app.get('/delete-image', express.json(), express.urlencoded(), (req, res) => {
+    var id = req.query.id
+    var name = req.query.name
+    if(fs.existsSync(CRIMINAL_DIR + '/' + name + '/' + id + '.jpg')){
+        fs.rmSync(CRIMINAL_DIR + '/' + name + '/' + id + '.jpg')
+        reArrangeImages(name)
+    }
+    res.end()
+})
+
+app.post('/login', express.json(), express.urlencoded(), checkNotAuthenticated, mwSaveLog, passport.authenticate('local', {
     successRedirect: '/dashboard',
     failureRedirect: '/login',
     failureFlash: true
 }))
 
+function mwSaveLog(req, res, next){
+    saveActivityLog(req.body.badge, "Police with badge " + req.body.badge + " has logged in")
+    next()
+}
+
 app.post('/logout', (req, res) => {
-    req.logOut((err) => {
+    var id = req.session.passport.user
+    req.logOut(async (err) => {
         if(err){
             return next(err)
         }
+        var police = await getCurrentPoliceById(id)
+        console.log(police)
+        saveActivityLog(police.badge, "Police with badge " + police.badge + " has logged out")
         res.redirect('/login')
     })
 })
@@ -160,14 +227,19 @@ app.get('/automate', (req, res) => {
 })
 
 app.post('/upload', (req, res) => {
+    var id = req.session.passport.user
+    var name = req.query.crim_name
+    console.log(id)
     saveCriminal(req)
     .then(async () => {
         await prisma.$disconnect()
-        upload(req,res,function(err) {
+        upload(req,res, async function(err) {
             if(err) {
                 res.send(err)
             }
             else {
+                var police = await getCurrentPoliceById(id)
+                saveActivityLog(police.badge, "Police with badge " + police.badge + " has added " + name + " as a new criminal/suspect")
                 res.redirect('/dashboard')
             }
         })
@@ -179,14 +251,26 @@ app.post('/upload', (req, res) => {
     })
 })
 
+app.post('/upload-image', (req, res) => {
+    upload(req,res, async function(err) {
+        if(err) {
+            res.send(err)
+        }
+        res.redirect('/criminal/' + req.query.id)
+    })
+})
+
 app.post('/delete', (req, res) => {
     var id = req.query.id
+    var pid = req.session.passport.user
     deleteCriminal(id)
     .then(async (person) => {
         await prisma.$disconnect()
         if(fs.existsSync(CRIMINAL_DIR + '/' + person.name)){
             fs.rmSync(CRIMINAL_DIR + '/' + person.name, { recursive: true, force: true })
         }
+        var police = await getCurrentPoliceById(pid)
+        saveActivityLog(police.badge, "Police with badge " + police.badge + " has deleted " + person.name + " record")
         res.redirect('/dashboard')
     })
     .catch(async (e) => {
@@ -218,6 +302,73 @@ app.get('/get-all-criminals', (req, res) => {
 app.get('/criminal-record', async (req, res) => {
     res.send(await getSpecificCriminal(req.query.c_id))
 })
+
+app.post('/criminal-detected', express.json(), express.urlencoded(), async (req, res) => {
+    saveLog(req.body)
+    res.end()
+})
+
+async function reArrangeImages(name){
+    if(fs.existsSync(CRIMINAL_DIR + '/' + name)){
+        var files = fs.readdirSync(CRIMINAL_DIR + '/' + name, (err, files) => {
+            return files
+        })
+        var mainDir = CRIMINAL_DIR + '/' + name
+        for(var i = 0; i < files.length; i++){
+            fs.rename(mainDir + '/' + files[i], mainDir + '/' + (i + 1) + '.jpg', (err) => {
+                if(err) console.log(err)
+            })
+        }
+    }
+}
+
+async function saveActivityLog(badge, message){
+    var police = await prisma.police.findUnique({
+        where:{
+            badge: badge
+        }
+    })
+    await prisma.activityLogs.create({
+        data:{
+            policeId: police.id,
+            message: message
+        }
+    })
+}
+
+async function getCriminalLogs(){
+    return await prisma.logs.findMany({
+        orderBy:{
+            date_time: 'desc'
+        }
+    })
+}
+
+async function getActivityLogs(){
+    return await prisma.activityLogs.findMany({
+        take: 10,
+        orderBy:{
+            date_time: 'desc'
+        },
+        include:{
+            police:{
+                include:{
+                    person: true
+                }
+            }
+        }
+    })
+}
+
+async function saveLog(data){
+    await prisma.logs.create({
+        data:{
+            name: data.name,
+            percentage: data.percentage,
+            location: data.address
+        }
+    })
+}
 
 async function savePolice(data, update){
     var updateValue = 0
@@ -269,10 +420,19 @@ async function getSpecificCriminal(id){
         }
     })
 }
-
 async function getCriminals(){
     return await prisma.criminal.findMany({
         include: {
+            person: true
+        }
+    })
+}
+async function getCriminal(id){
+    return await prisma.criminal.findFirst({
+        where:{
+            id: Number(id)
+        },
+        include:{
             person: true
         }
     })
@@ -286,6 +446,7 @@ async function saveCriminal(req){
         create:{
             description: req.query.crim_description,
             lastSeen: req.query.crim_lastSeen,
+            violation: req.query.crim_violation,
             person:{
                 create:{
                     name: req.query.crim_name,
@@ -297,6 +458,7 @@ async function saveCriminal(req){
         update:{
             description: req.query.crim_description,
             lastSeen: req.query.crim_lastSeen,
+            violation: req.query.crim_violation,
             person:{
                 update:{
                     name: req.query.crim_name,
@@ -362,5 +524,11 @@ function getSettingsValues(key){
     }
     return null
 }
-
+async function getCurrentPoliceById(id){
+    return await prisma.police.findFirst({
+        where:{
+            id: id
+        }
+    })
+}
 app.listen(3000)

@@ -11,35 +11,47 @@ datasource db {
 }
 
 model Person {
-  id          Int     @id @default(autoincrement())
-  name        String  @db.VarChar(255)
-  sex         String  @db.VarChar(255)
-  address     String?
-  phoneNumber String?
-  role        String  @db.VarChar(255)
-  criminal    Criminal?
-  police      Police?
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(255)
+  sex           String    @db.VarChar(255)
+  address       String?
+  phoneNumber   String?
+  role          String    @db.VarChar(255)
+  criminal      Criminal?
+  police        Police?
 }
 
 model Criminal {
-  id          Int     @id @default(autoincrement())
-  description String?
-  lastSeen    String?
-  person      Person  @relation(fields: [personId], references: [id])
-  personId    Int     @unique
+  id            Int       @id @default(autoincrement())
+  description   String?
+  lastSeen      String?
+  violation     String    @db.VarChar(255)
+  person        Person    @relation(fields: [personId], references: [id])
+  personId      Int       @unique
 }
 
 model Police {
-  id          Int     @id @default(autoincrement())
-  badge       String  @unique
-  password    String  @db.VarChar(255)
-  person      Person  @relation(fields: [personId], references: [id])
-  personId    Int     @unique
+  id            Int       @id @default(autoincrement())
+  badge         String    @unique
+  password      String    @db.VarChar(255)
+  person        Person    @relation(fields: [personId], references: [id])
+  personId      Int       @unique
+  activityLogs  ActivityLogs[]
+
 }
 
 model Logs {
-  id          Int     @id @default(autoincrement())
-  name        String  @db.VarChar(255)
-  date_time   DateTime @default(now())
-  location    String  @db.VarChar(255)
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(255)
+  percentage    String    @db.VarChar(255)
+  date_time     DateTime  @default(now())
+  location      String    @db.VarChar(255)
+}
+
+model ActivityLogs {
+  id            Int       @id @default(autoincrement())
+  police        Police    @relation(fields: [policeId], references: [id])
+  policeId      Int
+  message       String    @db.VarChar(255)
+  date_time     DateTime  @default(now())
 }

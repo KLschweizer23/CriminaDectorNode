@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('../partials/head') %>
+        <style>
+            label {
+                color: white;
+            }
+
+            #demo {
+                height: 100%;
+                position: relative;
+                overflow: hidden;
+            }
+
+
+            .green {
+                background-color: #6fb936;
+            }
+
+            .thumb {
+                margin-bottom: 30px;
+            }
+
+            .page-top {
+                margin-top: 85px;
+            }
+
+
+            img.zoom {
+                width: 100%;
+                height: 200px;
+                border-radius: 5px;
+                object-fit: cover;
+            }
+
+
+            .transition {
+                -webkit-transform: scale(1.2);
+                -moz-transform: scale(1.2);
+                -o-transform: scale(1.2);
+                transform: scale(1.2);
+            }
+
+            .modal-title {
+                color: #000;
+            }
+        </style>
+        <script>            
+            function deleteImage(name, id){
+                $.get('/delete-image?name=' + name + '&id=' + id)
+                location.reload()
+            }
+            function submitForm(){
+                var name = document.getElementById('crim_name_edit').value
+                var sex = document.getElementById('crim_sex_edit').value
+                var desc = document.getElementById('crim_description_edit').value
+                var lastSeen = document.getElementById('crim_lastSeen_edit').value
+                var violation = document.getElementById('crim_violation').value
+
+                var current = document.getElementById("myform_edit").action
+                document.getElementById("myform_edit").action = current + "&crim_name=" + name + '&crim_sex=' + sex + '&crim_description=' + desc + '&crim_lastSeen=' + lastSeen  + '&crim_violation=' + violation
+                $('#myform_edit')[0].submit()
+            }
+            function uploadForm(){
+                $('#myform_upload')[0].submit()
+            }
+        </script>
+        <title>Criminal - CriminaDector!</title>
+    </head>
+  <body style="background-color:rgb(52, 63, 75);">
+    <header><%- include('../partials/header') %></header>
+    <main>
+        <div class="bg-secondary maincontainer" style="padding:1%">
+            <div class="text-center">
+                <h1 class="text-white">Profile</h1>
+            </div>
+            <hr style="background-color:white">
+            <div class="text-white w-75 p-3 mx-auto bg-dark">
+                <h5>Name: <span>
+                        <%= criminal.person.name %>
+                    </span></h5>
+                <h5>Sex: <span>
+                        <%= criminal.person.sex %>
+                    </span></h5>
+                <h5>Violation: <span>
+                        <%= criminal.violation %>
+                    </span></h5>
+                <hr style="background-color:white">
+                <div class="container">
+                    <div class="text-right">
+                        <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#uploadImageModal">Upload Image</button>
+                    </div>
+                    <div class="row">
+                        <% for(var i = 0; i < pictures.length; i++){%>
+                            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
+                                <a href="/criminals/<%= pictures[i].name %>/<%= pictures[i].id %>.jpg">
+                                    <div class="bg-primary" style="width: 200px; height: 200px;">
+                                        <img style="width: 200px; height:200px; object-fit: cover;" src="/criminals/<%= pictures[i].name %>/<%= pictures[i].id %>.jpg" alt=""/>
+                                    </div>
+                                </a>
+                                <% if(pictures.length > 1){%>
+                                    <button class="btn btn-danger" style="width: 200px" onclick="deleteImage(name, id)" name="<%= pictures[i].name %>" id="<%= pictures[i].id %>">Delete</button>
+                                <% } %>
+                            </div>
+                        <% }%>
+                    </div>
+                </div>
+                <hr class="bg-white">
+                <div class="text-right">
+                    <button class="btn btn-secondary" data-toggle="modal" data-target="#editCriminalModal">Edit User</button>
+                    <form action="/delete?id=<%= criminal.id %>" method="post" style="display: inline-block;">
+                        <button class="btn btn-danger">Delete User</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editCriminalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content" style="background-color:rgb(52, 63, 75);">
+                    <form id="myform_edit" action="/upload?update=<%= criminal.id %>" method="POST" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-white" id="exampleModalLongTitle">Edit data</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="text-white" for="crim_name">Name: &nbsp</label>
+                            <input id="crim_name_edit" value="<%= criminal.person.name %>" type="text" placeholder="Name" name="crimname" required>
+                            <br>
+                            <label class="text-white" for="crim_sex">Sex: &nbsp</label>
+                            <% if(criminal.person.sex == 'male'){ %>
+                                <input id="crim_sex_edit" type="radio" name="crim_sex" value="male" required checked>
+                                <label class="text-white" for="male" checked>Male</label>
+                                <input id="crim_sex_edit" type="radio" name="crim_sex" value="female" required>
+                                <label class="text-white" for="female">Female</label>
+                            <% }else{ %>
+                                <input id="crim_sex_edit" type="radio" name="crim_sex" value="male" required>
+                                <label class="text-white" for="male" checked>Male</label>
+                                <input id="crim_sex_edit" type="radio" name="crim_sex" value="female" required checked>
+                                <label class="text-white" for="female">Female</label>
+                            <% } %>
+                            <br>
+                            <label class="text-white" for="crim_description">Description: &nbsp</label>
+                            <input id="crim_description_edit" value="<%= criminal.description %>" type="text" placeholder="Description"
+                                name="crimdescription" required>
+                            <br>
+                            <label class="text-white" for="crim_lastSeen">Last seen: &nbsp</label>
+                            <input id="crim_lastSeen_edit" value="<%= criminal.lastSeen %>" type="text" placeholder="Last seen" name="crimlastseen" required>
+                            <br>
+                            <label class="text-white" for="crim_violation">Violation: &nbsp</label>
+                            <input id="crim_violation" value="<%= criminal.violation %>" type="text" placeholder="Violation" name="crimviolation"
+                                required>
+                            <br>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" onclick="submitForm()" class="btn btn-success">Save changes</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Upload Modal -->
+        <div class="modal fade" id="uploadImageModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content" style="background-color:rgb(52, 63, 75);">
+                    <form id="myform_upload" action="/upload-image?id=<%= criminal.id %>&crim_name=<%= criminal.person.name %>" method="POST" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-white" id="exampleModalLongTitle">Upload Image</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input class="text-white" id="image" type="file" name="image" onchange="loadFile(event)" required />
+                            <div class="text-center m-0 p-0 mt-2">
+                                <img id="output" style="width: 400px;" />
+                            </div>
+                            <script>
+                                var loadFile = function (event) {
+                                    var output = document.getElementById('output');
+                                    output.src = URL.createObjectURL(event.target.files[0]);
+                                    output.onload = function () {
+                                        URL.revokeObjectURL(output.src) // free memory
+                                    }
+                                };
+                            </script>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Upload</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+  </body>
+</html>

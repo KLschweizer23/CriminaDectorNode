@@ -14,6 +14,11 @@ Promise.all([
     faceapi.nets.ssdMobilenetv1.loadFromUri('./models') //heavier/accurate version of tiny face detector
 ]).then(start);
 
+$(document).ready(function () {
+    $('#dtBasicExample').DataTable();
+    $('.dataTables_length').addClass('bs-select');
+});
+
 async function start() {
     $('#loadingModal').modal({ show: true });
     enableAutomaticDetection()
@@ -81,18 +86,9 @@ $('#myform').on('submit', ()=> {
     var sex = document.getElementById('crim_sex').value
     var desc = document.getElementById('crim_description').value
     var lastSeen = document.getElementById('crim_lastSeen').value
+    var violation = document.getElementById('crim_violation').value
 
-    document.getElementById("myform").action = "/upload?crim_name=" + name + '&crim_sex=' + sex + '&crim_description=' + desc + '&crim_lastSeen=' + lastSeen 
-    return true
-})
-$('#myform_edit').on('submit', ()=> {
-    var name = document.getElementById('crim_name_edit').value
-    var sex = document.getElementById('crim_sex_edit').value
-    var desc = document.getElementById('crim_description_edit').value
-    var lastSeen = document.getElementById('crim_lastSeen_edit').value
-
-    var current = document.getElementById("myform_edit").action
-    document.getElementById("myform_edit").action = current + "&crim_name=" + name + '&crim_sex=' + sex + '&crim_description=' + desc + '&crim_lastSeen=' + lastSeen 
+    document.getElementById("myform").action = "/upload?crim_name=" + name + '&crim_sex=' + sex + '&crim_description=' + desc + '&crim_lastSeen=' + lastSeen + '&crim_violation=' + violation
     return true
 })
 async function recognizeFaces() {
@@ -107,7 +103,6 @@ async function recognizeFaces() {
     
     if(automateDetection){
         const canvas = faceapi.createCanvasFromMedia(video)
-        document.getElementById('container').append(canvas)
 
         const displaySize = { width: video.width, height: video.height }
         faceapi.matchDimensions(canvas, displaySize)
@@ -159,6 +154,7 @@ async function recognizeFaces() {
                         document.getElementById('result').innerHTML = 'No record found!'
                     }else{
                         document.getElementById('result').innerHTML = bestKey + ' (' + ((bestData[bestKey] / 10) * 100) + '%)'
+                        criminalFound(bestKey, ((bestData[bestKey] / 10) * 100))
                     }
                     setTimeout(() => {
                         console.log('SHOW RESULT WAIT TIME')
@@ -171,7 +167,6 @@ async function recognizeFaces() {
         button.addEventListener('click', async() => {
             console.log('Playing')
             const canvas = faceapi.createCanvasFromMedia(video)
-            document.getElementById('container').append(canvas)
             
             const displaySize = { width: video.width, height: video.height }
             faceapi.matchDimensions(canvas, displaySize)
@@ -179,6 +174,15 @@ async function recognizeFaces() {
         })
     }
 }
+
+async function criminalFound(name, percentage){
+    var address = $('#detectionAddress').val()
+    if(address == ''){
+        address = 'Unknown Area'
+    }
+    $.post('/criminal-detected', {name: name, percentage: percentage, address: address})
+}
+
 async function processDetection(faceMatcher, displaySize){
     document.getElementById('result').innerHTML = 'Processing . . .'
     var bestData = {}
@@ -191,6 +195,7 @@ async function processDetection(faceMatcher, displaySize){
                 document.getElementById('result').innerHTML = 'No face detected or Detection was interrupted!'
                 return
             }
+            continue
         }
         const resizedDetections = faceapi.resizeResults(detections, displaySize)
 
@@ -216,6 +221,7 @@ async function processDetection(faceMatcher, displaySize){
         return
     }
     document.getElementById('result').innerHTML = bestKey + ' (' + ((bestData[bestKey] / 10) * 100) + '%)'
+    criminalFound(bestKey, ((bestData[bestKey] / 10) * 100))
 }
 //load images
 async function loadLabeledImages() {

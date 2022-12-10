@@ -1,70 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <%- include('../partials/head') %>
-        
+
+<head>
+    <%- include('../partials/head') %>
+
         <style>
-            label{
-                color:white;
+            label {
+                color: white;
             }
         </style>
         <title>Login to CriminaDector!</title>
-    </head>
-  <body style="background-color:rgb(52, 63, 75);">
-    <header><%- include('../partials/header') %></header>
+</head>
+
+<body style="background-color:rgb(52, 63, 75);">
+    <header>
+        <%- include('../partials/header') %>
+    </header>
     <main>
-        <div class = "container-fluid">
-            <div class = "row">
-                <div class = "col-sm-12 col-md-6" style="padding:3%; background-color: gray;">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12 col-md-6" style="padding:3%; background-color: gray;">
                     <center>
                         <h1 style="text-align:center;color:white;">LOGIN</h1>
                         <img src="img/profile_logo.png" style="border-radius:100%; width:40%;margin:4%">
                         <form action="/login" method="POST">
                             <label for="loginbadge"><b>Badge Number</b></label>
-                            <input type="text" placeholder="Badge Number" name="badge" required
-                            style = "width:80%">
+                            <input type="text" placeholder="Badge Number" name="badge" required style="width:80%">
                             <br>
                             <label for="psw"><b>Password</b></label><br>
-                            <input type="password" placeholder="Enter Password" name="password" required style = "width:80%">
+                            <input type="password" placeholder="Enter Password" name="password" required
+                                style="width:80%">
                             <br><br>
                             <button class="btn btn-secondary" type="submit">Login</button>
                         </form>
                     </center>
                 </div>
-    
-                <div class = " col-sm-12 col-md-6" style="padding:2%; background-color: gray;">
+
+                <div class=" col-sm-12 col-md-6" style="padding:2%; background-color: gray;">
                     <h1 style="text-align:center;color:white;">REGISTER</h1>
-                    <form action="/register" method="POST"><center>
-                        <label for="fullname"><b>Full Name</b></label><br>
-                        <input type="text" placeholder="Enter Full Name" name="fullname" required
-                        style = "width:80%">
-                        <br>
-                        <label for="address"><b>Address</b></label><br>
-                        <input type="text" placeholder="Enter Address" name="address" required style="width:80%">
-                        <br>
-                        <label><b>Sex: </b></label>
-                        <input type="radio" name="sex" value = "male" required checked>
-                        <label for="male">Male</label>
-                        <input type="radio" name="sex" value = "female" required>
-                        <label for="female">Female</label>
-                        <br>
-                        <label for="phonenum"><b>Phone Number</b></label><br>
-                        <input type="text" placeholder="Enter Phone Number" name="phone_num" required
-                        style = "width:80%">
-                        <br>
-                        <label for="badgenum"><b>Badge Number</b></label><br>
-                        <input type="text" placeholder="Enter Badge Number" name="badge" required
-                        style = "width:80%">
-                        <br>
-                        <label for="psw"><b>Password</b></label><br>
-                        <input type="password" placeholder="Enter Password" name="password" required style = "width:80%">
-                        <br><br>
-                        <button type="submit" class= "btn btn-primary">Register</button>
-                    
-                    </form></center>
+                    <form action="/register" method="POST">
+                        <center>
+                            <label for="fullname"><b>Full Name</b></label><br>
+                            <input type="text" placeholder="Enter Full Name" name="fullname" required style="width:80%">
+                            <br>
+                            <label for="address"><b>Address</b></label><br>
+                            <input type="text" placeholder="Enter Address" name="address" required style="width:80%">
+                            <br>
+                            <label><b>Sex: </b></label>
+                            <input type="radio" name="sex" value="male" required checked>
+                            <label for="male">Male</label>
+                            <input type="radio" name="sex" value="female" required>
+                            <label for="female">Female</label>
+                            <br>
+                            <label for="phonenum"><b>Phone Number</b></label><br>
+                            <input type="text" placeholder="Enter Phone Number" name="phone_num" required
+                                style="width:80%">
+                            <br>
+                            <label for="badgenum"><b>Badge Number</b></label><br>
+                            <input type="text" placeholder="Enter Badge Number" name="badge" required style="width:80%">
+                            <br>
+                            <label for="psw"><b>Password</b></label><br>
+                            <input type="password" placeholder="Enter Password" name="password" required
+                                style="width:80%">
+                            <br><br>
+                            <button type="submit" class="btn btn-primary">Register</button>
+
+                    </form>
+                    </center>
                 </div>
             </div>
         </div>
     </main>
-  </body>
+</body>
+
 </html>

@@ -10,24 +10,27 @@
       <div class="bg-secondary maincontainer">
         <div class="row" style="margin: 10px">
           <div class="col-8 divider">
-            <h2>Recent Criminals Last Seen</h2>
+            <h2>Recent Suspects</h2>
             <table class="tblhome">
               <tr class="trhome" rowspan="2">
-                <td class="profileimg">
-                  <a href="/profile">
-                    <img src="" class="profilepicture" />
-                  </a>
-                </td>
                 <td>
-                  <table>
-                    <tr>
-                      <td><p>Name:</p></td>
-                      <td><p>John Doe</p></td>
-                    </tr>
-                    <tr>
-                      <td><p>Last seen:</p></td>
-                      <td><p>January 1, 2020 | 14:46</p></td>
-                    </tr>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th class="text-white" scope="col">Name</th>
+                        <th class="text-white" scope="col">Location</th>
+                        <th class="text-white" scope="col">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% for (var i = 0; i < logs.length; i++){ %>
+                        <tr>
+                          <td class="text-white"><%= logs[i].name %></td>
+                          <td class="text-white"><%= logs[i].location %></td>
+                          <td class="text-white"><%= logs[i].date_time %></td>
+                        </tr>
+                      <% } %>
+                    </tbody>
                   </table>
                 </td>
               </tr>
