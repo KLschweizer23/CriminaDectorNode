@@ -195,9 +195,13 @@ app.post('/logout', (req, res) => {
 })
 
 app.post('/register', express.json(), express.urlencoded(), async (req, res) => {
-    savePolice(req.body, req.query.update)
-    .then(async () => {
+    await savePolice(req.body, req.query.update)
+    .then(async (data) => {
         await prisma.$disconnect()
+        console.log(data)
+        if(data == null){
+            res.redirect('/login?error=true')
+        }
         res.redirect('/login')
     })
     .catch(async (e) => {
@@ -328,6 +332,9 @@ async function saveActivityLog(badge, message){
             badge: badge
         }
     })
+    if(police == null){
+        return
+    }
     await prisma.activityLogs.create({
         data:{
             policeId: police.id,
@@ -376,6 +383,16 @@ async function savePolice(data, update){
         updateValue = Number(update)
     }
     
+    var pol = await prisma.police.findUnique({
+        where:{
+            badge: data.badge
+        }
+    })
+
+    if(pol != null){
+        return null
+    }
+
     var encryptedPassword = await bcrypt.hash(data.password, 10)
     return await prisma.police.upsert({
         create:{

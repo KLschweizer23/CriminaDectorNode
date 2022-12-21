@@ -257,24 +257,42 @@
                             <label class="text-white" for="crim_lastSeen">Last seen: &nbsp</label>
                             <input id="crim_lastSeen" type="text" placeholder="Last seen" name="crimlastseen" required>
                             <br>
+                            <div id="error-alert" class="alert alert-danger" role="alert">
+                                No face detected! Please provide a better image
+                            </div>
                             <input class="text-white" id="image" type="file" name="image" onchange="loadFile(event)" />
                             <div class="text-center m-0 p-0 mt-2">
                                 <img id="output" style="width: 400px;" />
                             </div>
-                            <script>
-                                var loadFile = function (event) {
-                                    var output = document.getElementById('output');
-                                    output.src = URL.createObjectURL(event.target.files[0]);
-                                    output.onload = function () {
-                                        URL.revokeObjectURL(output.src) // free memory
-                                    }
-                                };
-                            </script>
                         </div>
                         <div class="modal-footer">
-                            <button type="submit" class="btn btn-success">Add Criminal</button>
+                            <button id="submitButton" type="submit" class="btn btn-success">Add Criminal</button>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
+                        <script>
+                            var error = document.getElementById('error-alert')
+                            var submitButton = document.getElementById('submitButton')
+                            error.style.display = "none"
+                            submitButton.disabled = true;
+                            var loadFile = function (event) {
+                                var output = document.getElementById('output');
+                                output.src = URL.createObjectURL(event.target.files[0]);
+                                output.onload = function () {
+                                    URL.revokeObjectURL(output.src) // free memory
+                                }
+                                isFacePresent(output)
+                            };
+                            async function isFacePresent(image){
+                                const detections = await faceapi.detectSingleFace(output)
+                                if (detections == null) {
+                                    error.style.display = "block";
+                                    submitButton.disabled = true;
+                                } else {
+                                    error.style.display = "none";
+                                    submitButton.disabled = false;
+                                }
+                            }
+                        </script>
                     </form>
                 </div>
             </div>

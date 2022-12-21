@@ -23,6 +23,11 @@
                     <center>
                         <h1 style="text-align:center;color:white;">LOGIN</h1>
                         <img src="img/profile_logo.png" style="border-radius:100%; width:40%;margin:4%">
+                        <% if(messages.error){ %>
+                            <div class="alert alert-danger w-75" role="alert">
+                                <%= messages.error %>
+                            </div>
+                        <% } %>
                         <form action="/login" method="POST">
                             <label for="loginbadge"><b>Badge Number</b></label>
                             <input type="text" placeholder="Badge Number" name="badge" required style="width:80%">
@@ -71,6 +76,9 @@
             </div>
         </div>
     </main>
+    <script>
+        
+    </script>
 </body>
 
 </html>
