@@ -1,6 +1,6 @@
 
 window.onerror = function() {
-    location.reload();
+    location.reload()
 }
 const video = document.getElementById('videoInput')
 const button = document.getElementById('videoStarter')
@@ -15,12 +15,12 @@ Promise.all([
 ]).then(start);
 
 $(document).ready(function () {
-    $('#dtBasicExample').DataTable();
-    $('.dataTables_length').addClass('bs-select');
+    $('#dtBasicExample').DataTable()
+    $('.dataTables_length').addClass('bs-select')
 });
 
 async function start() {
-    $('#loadingModal').modal({ show: true });
+    $('#loadingModal').modal({ show: true })
     enableAutomaticDetection()
     if(await checkIfLoadModels()){
         navigator.getUserMedia(
@@ -180,7 +180,21 @@ async function criminalFound(name, percentage){
     if(address == ''){
         address = 'Unknown Area'
     }
+
+    showResultInPopup(name)
+
     $.post('/criminal-detected', {name: name, percentage: percentage, address: address})
+}
+
+async function showResultInPopup(name){
+    var data = await $.get('/getCriminal?name=' + name, async (data) => {
+        return data
+    })
+    document.getElementById("result_crimImage").src = data.url
+    $('#result_name').text(data.name)
+    $('#result_violation').text(data.violation)
+    $('#result_description').text(data.description)
+    $('#resultModal').modal({show: true})
 }
 
 async function processDetection(faceMatcher, displaySize){

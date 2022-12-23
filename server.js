@@ -160,6 +160,16 @@ app.get('/criminal/:id', checkAuthenticated, async (req, res) => {
     })
 })
 
+app.get('/getCriminal', async (req, res) => {
+    var criminal = await getCriminalByName(req.query.name)
+    res.send({
+        name: criminal.person.name, 
+        violation: criminal.violation, 
+        description: criminal.description, 
+        url: '/criminals/' + criminal.person.name + '/1.jpg'
+    })
+})
+
 app.get('/delete-image', express.json(), express.urlencoded(), (req, res) => {
     var id = req.query.id
     var name = req.query.name
@@ -453,6 +463,14 @@ async function getCriminal(id){
             person: true
         }
     })
+}
+async function getCriminalByName(name){
+    var criminals = await getCriminals()
+    for(var i = 0; i < criminals.length; i++){
+        if(criminals[i].person.name == name){
+            return criminals[i]
+        }
+    }
 }
 async function saveCriminal(req){
     var updateValue = 0

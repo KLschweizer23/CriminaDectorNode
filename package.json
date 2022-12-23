@@ -4,7 +4,8 @@
   "description": "Web app to detect wanted criminals",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "devStart": "nodemon server.js"
   },
   "author": "",
   "license": "ISC",

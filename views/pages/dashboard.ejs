@@ -309,6 +309,40 @@
                 </div>
             </div>
         </div>
+        <!-- Loading Modal -->
+        <div class="modal fade" id="resultModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+            aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+                <div class="modal-content text-center p-3 bg-white">
+                    <h3 class="text-dark">Similar Criminal Detected!</h3>
+                    <div class="bg-primary mb-2" style="width: auto; height: 400px;">
+                        <img id="result_crimImage" style="width: 100%; height:100%; object-fit: cover;" src="" alt="Criminal Image"/>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 col-12 m-0 p-2 w-100 text-left w-100 pl-3" style="overflow:scroll; height: 100px;">
+                            <h6 id="result_name">Name</h6>
+                            <p id="result_description" class="text-dark m-0" style="font-size: small;">DescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescriptionDescription</p>
+                            <p id="result_violation" class="text-dark m-0" style="font-size: small;">Violation
+                                Violation
+                                Violation
+                                Violation
+                                Violation
+                                Violation
+                                Violation
+                                Violation
+                                Violation
+                                Violation</p>
+                        </div>
+
+                        <div class="col-sm-6 col-12 w-100 mx-auto mb-2">
+                            <button type="button" class="btn btn-block btn-danger" onclick="confirmedIdentity()">Confirm and Report</button>
+                            <button type="button" class="btn btn-block btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 </body>
 <script defer async src="js/script.js"></script>
