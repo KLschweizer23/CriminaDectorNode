@@ -4,7 +4,6 @@ if(process.env.NODE_ENV !== 'production'){
 
 const express = require('express')
 const fs = require('fs')
-const os = require('os')
 const bcrypt = require('bcrypt')
 const faceapi = require('face-api.js')
 const tf = require('@tensorflow/tfjs-node')
@@ -22,6 +21,10 @@ const prisma = new PrismaClient()
 const app = express()
 const initializePassport = require('./passport-config')
 const { data } = require('@tensorflow/tfjs-node')
+
+var request = require('request')
+const { spawn } = require('child_process')
+
 initializePassport(
     passport,
     async badge => {
@@ -101,20 +104,9 @@ var storage = multer.diskStorage({
 // mypic is the name of file attribute
 }).single("image");  
 
-const pool = mysql.createPool({
-    host: "sql.freedb.tech",
-    user: "freedb_police_user",
-    password: "9#VMNfVRugDtc&w",
-    database: "freedb_criminadector_node"
-})
-
-pool.getConnection((err, con) => {
-    if(err) console.log(err)
-    console.log('Connected successfully')
-})
-
 app.get('/', async (req, res) => {
     const logs = await getCriminalLogs()
+
     res.render('pages/index.ejs', {'authenticated': req.isAuthenticated(), 'logs': await logs})
 })
 
@@ -238,6 +230,43 @@ app.get('/automate', (req, res) => {
         setSettingsValues("AUTO_DETECT", value)
         res.end()
     }
+})
+
+app.post('/report', express.json(), express.urlencoded(), (req, res) => {
+    var name = req.body.name
+    var address = req.body.address
+    
+    var apikey = 'a8a9425fe5bdd8615cf7087ee884aa07'
+    var number = '09384319457'
+    var message = 'Alert! Wanted Criminal, ' + name + ', has been spotted at ' + address + '.'
+    request.post(
+        'https://api.semaphore.co/api/v4/messages',
+        {json: {
+            apikey: apikey,
+            number: number,
+            message: message
+        }},
+        (error, response, body) => {
+            if(!error && response.statusCode == 200){
+                console.log(body)
+            }
+        }
+    )
+    request.post(
+        'https://api.semaphore.co/api/v4/messages',
+        {json: {
+            apikey: apikey,
+            number: '09466606292',
+            message: message
+        }},
+        (error, response, body) => {
+            if(!error && response.statusCode == 200){
+                console.log(body)
+            }
+        }
+    )
+
+    res.end()
 })
 
 app.post('/upload', (req, res) => {

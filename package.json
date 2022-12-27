@@ -33,7 +33,9 @@
     "node-fetch": "^3.3.0",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
-    "promise": "^8.3.0"
+    "promise": "^8.3.0",
+    "request": "^2.88.2",
+    "semaphore-api": "^1.0.1"
   },
   "devDependencies": {
     "dotenv": "^16.0.3",

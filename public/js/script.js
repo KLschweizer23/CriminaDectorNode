@@ -197,6 +197,12 @@ async function showResultInPopup(name){
     $('#resultModal').modal({show: true})
 }
 
+async function sendReport(){
+    var address = $('#detectionAddress').val()
+    var name = $('#result_name').text()
+    $.post('/report', {address: address, name: name})
+}
+
 async function processDetection(faceMatcher, displaySize){
     document.getElementById('result').innerHTML = 'Processing . . .'
     var bestData = {}
