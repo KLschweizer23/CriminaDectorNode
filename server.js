@@ -236,9 +236,18 @@ app.post('/report', express.json(), express.urlencoded(), (req, res) => {
     var name = req.body.name
     var address = req.body.address
     
-    var apikey = 'a8a9425fe5bdd8615cf7087ee884aa07'
-    var number = '09384319457'
+    var number = ['09384319457', '09466606292']
     var message = 'Alert! Wanted Criminal, ' + name + ', has been spotted at ' + address + '.'
+    
+    for(var i = 0; i < number.length; i++){
+        sendMessage(number[i], message)
+    }
+
+    res.end()
+})
+
+function sendMessage(number, message){
+    var apikey = 'a8a9425fe5bdd8615cf7087ee884aa07'
     request.post(
         'https://api.semaphore.co/api/v4/messages',
         {json: {
@@ -252,22 +261,7 @@ app.post('/report', express.json(), express.urlencoded(), (req, res) => {
             }
         }
     )
-    request.post(
-        'https://api.semaphore.co/api/v4/messages',
-        {json: {
-            apikey: apikey,
-            number: '09466606292',
-            message: message
-        }},
-        (error, response, body) => {
-            if(!error && response.statusCode == 200){
-                console.log(body)
-            }
-        }
-    )
-
-    res.end()
-})
+}
 
 app.post('/upload', (req, res) => {
     var id = req.session.passport.user

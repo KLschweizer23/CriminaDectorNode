@@ -201,6 +201,7 @@ async function sendReport(){
     var address = $('#detectionAddress').val()
     var name = $('#result_name').text()
     $.post('/report', {address: address, name: name})
+    $('#resultModal').modal('hide')
 }
 
 async function processDetection(faceMatcher, displaySize){
