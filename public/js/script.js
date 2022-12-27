@@ -12,9 +12,9 @@ Promise.all([
     // faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
     // faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
     // faceapi.nets.ssdMobilenetv1.loadFromUri('./models') //heavier/accurate version of tiny face detector
-    faceapi.nets.faceRecognitionNet.loadFromDisk('./models'),
-    faceapi.nets.faceLandmark68Net.loadFromDisk('./models'),
-    faceapi.nets.ssdMobilenetv1.loadFromDisk('./models') //heavier/accurate version of tiny face detector
+    faceapi.nets.faceRecognitionNet.loadFromDisk('../models'),
+    faceapi.nets.faceLandmark68Net.loadFromDisk('../models'),
+    faceapi.nets.ssdMobilenetv1.loadFromDisk('../models') //heavier/accurate version of tiny face detector
 ]).then(start);
 
 $(document).ready(function () {
