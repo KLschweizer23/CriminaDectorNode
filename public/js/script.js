@@ -13,8 +13,7 @@ Promise.all([
     faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
     faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
     faceapi.nets.ssdMobilenetv1.loadFromUri('./models') //heavier/accurate version of tiny face detector
-]);
-window.addEventListener('load', start)
+]).then(start);
 $(document).ready(function () {
     $('#dtBasicExample').DataTable()
     $('.dataTables_length').addClass('bs-select')
@@ -24,12 +23,6 @@ async function start() {
     $('#loadingModal').modal({ show: true })
     enableAutomaticDetection()
     if(await checkIfLoadModels()){
-        checkIfMediaIsLoaded()
-    }
-}
-
-async function checkIfMediaIsLoaded(){
-    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
         navigator.mediaDevices.getUserMedia(
             { video:{} },
             stream => video.srcObject = stream,
@@ -38,11 +31,6 @@ async function checkIfMediaIsLoaded(){
 
         console.log('video added')
         recognizeFaces() 
-    }else{
-        console.error(navigator)
-        console.error('--------------')
-        console.error(navigator.mediaDevices)
-        setTimeout(checkIfMediaIsLoaded, 2000)
     }
 }
 
