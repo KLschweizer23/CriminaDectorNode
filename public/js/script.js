@@ -24,7 +24,7 @@ async function start() {
     $('#loadingModal').modal({ show: true })
     enableAutomaticDetection()
     if(await checkIfLoadModels()){
-        navigator.mediaDevices.getDisplayMedia(
+        await navigator.getUserMedia(
             { video:{} },
             stream => video.srcObject = stream,
             err => console.error(err)
