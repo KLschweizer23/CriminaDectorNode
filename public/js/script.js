@@ -28,6 +28,7 @@ async function start() {
             stream => video.srcObject = stream,
             err => console.error(err)
         )
+        console.log(video.srcObject)
 
         console.log('video added')
         recognizeFaces() 
@@ -92,6 +93,7 @@ $('#myform').on('submit', ()=> {
     return true
 })
 async function recognizeFaces() {
+    console.log(video.srcObject)
     console.log('loading images...')
     const labeledDescriptors = await loadLabeledImages()
     $('#loadingModal').modal('hide')
@@ -167,7 +169,9 @@ async function recognizeFaces() {
             }
         }, 500)
     }else{
+        console.log(video.srcObject)
         button.addEventListener('click', async() => {
+            console.log(video.srcObject)
             console.log('Playing')
             const canvas = await faceapi.createCanvasFromMedia(video)
             
