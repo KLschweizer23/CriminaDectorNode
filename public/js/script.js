@@ -29,8 +29,8 @@ async function start() {
 }
 
 async function checkIfMediaIsLoaded(){
-    if(window.navigator.mediaDevices && window.navigator.mediaDevices.getUserMedia){
-        window.navigator.mediaDevices.getUserMedia(
+    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+        navigator.mediaDevices.getUserMedia(
             { video:{} },
             stream => video.srcObject = stream,
             err => console.error(err)
@@ -39,9 +39,9 @@ async function checkIfMediaIsLoaded(){
         console.log('video added')
         recognizeFaces() 
     }else{
-        console.error(window.navigator)
+        console.error(navigator)
         console.error('--------------')
-        console.error(window.navigator.mediaDevices)
+        console.error(navigator.mediaDevices)
         setTimeout(checkIfMediaIsLoaded, 2000)
     }
 }
