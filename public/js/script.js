@@ -29,7 +29,7 @@ async function start() {
 }
 
 async function checkIfMediaIsLoaded(){
-    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    if(window.navigator.mediaDevices && window.navigator.mediaDevices.getUserMedia){
         window.navigator.mediaDevices.getUserMedia(
             { video:{} },
             stream => video.srcObject = stream,
