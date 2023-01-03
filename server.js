@@ -319,20 +319,26 @@ app.post('/delete', (req, res) => {
 })
 
 app.get('/get-all-criminals', (req, res) => {
+    console.log('1')
     var returnObject = []
     var crimDir = CRIMINAL_DIR
+    console.log('2')
     var files = fs.readdirSync(crimDir, (err, files) => {
         return files
     })
+    console.log('3')
     files.forEach((folder) => {
         var obj = {}
         obj['name'] = folder
+        console.log('4')
         var pictures = fs.readdirSync(crimDir + '/' + folder, (err, files) => {
             return files
         })
+        console.log('5')
         obj['picSize'] = pictures.length
         returnObject.push(obj)
     })
+    console.log('6')
     res.send(returnObject)
 })
 
