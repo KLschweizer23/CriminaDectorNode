@@ -323,6 +323,9 @@ app.get('/get-all-criminals', (req, res) => {
     var returnObject = []
     var crimDir = CRIMINAL_DIR
     console.log('2')
+    if(!fs.existsSync(crimDir)){
+        fs.mkdirSync(crimDir)
+    }
     var files = fs.readdirSync(crimDir, (err, files) => {
         return files
     })
