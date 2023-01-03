@@ -1,7 +1,7 @@
 
-window.onerror = function() {
-    location.reload()
-}
+//window.onerror = function() {
+//    location.reload()
+//}
 const video = document.getElementById('videoInput')
 const button = document.getElementById('videoStarter')
 
