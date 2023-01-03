@@ -39,7 +39,9 @@ async function checkIfMediaIsLoaded(){
         console.log('video added')
         recognizeFaces() 
     }else{
-        console.error('getUserMedia is not yet available')
+        console.error(window.navigator)
+        console.error('--------------')
+        console.error(window.navigator.mediaDevices)
         setTimeout(checkIfMediaIsLoaded, 2000)
     }
 }
