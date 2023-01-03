@@ -8,7 +8,19 @@
 
 <body>
     <header>
-        <script defer async src="./js/face-api.min.js"></script>
+        //<script defer async src="./js/face-api.min.js"></script>
+        <script id="face-api-script" src="js/face-api.min.js"></script>
+        <script>
+            const scriptElement = document.getElementById('face-api-script');
+
+            scriptElement.onload = function() {
+                Promise.all([
+                    faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+                    faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
+                    faceapi.nets.ssdMobilenetv1.loadFromUri('./models') //heavier/accurate version of tiny face detector
+                ]).then(start);
+            };
+        </script>
         <%- include('../partials/header') %>
         <style>
             #data tr {
