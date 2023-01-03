@@ -1,18 +1,19 @@
 
-//window.onerror = function() {
-//    location.reload()
-//}
+window.onerror = function() {
+    location.reload()
+}
 const video = document.getElementById('videoInput')
 const button = document.getElementById('videoStarter')
 
 var automateDetection = false
 
 $('#loadingModal').modal({ show: true });
-Promise.all([
-    faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
-    faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
-    faceapi.nets.ssdMobilenetv1.loadFromUri('./models') //heavier/accurate version of tiny face detector
-]).then(start);
+
+//Promise.all([
+//    faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+//    faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
+//    faceapi.nets.ssdMobilenetv1.loadFromUri('./models') //heavier/accurate version of tiny face detector
+//]).then(start);
 
 $(document).ready(function () {
     $('#dtBasicExample').DataTable()
