@@ -23,7 +23,7 @@ async function start() {
     $('#loadingModal').modal({ show: true })
     enableAutomaticDetection()
     if(await checkIfLoadModels()){
-        navigator.mediaDevices.getUserMedia(
+        navigator.mediaDevices.getDisplayMedia(
             { video:{} },
             stream => video.srcObject = stream,
             err => console.error(err)
@@ -169,7 +169,7 @@ async function recognizeFaces() {
     }else{
         button.addEventListener('click', async() => {
             console.log('Playing')
-            const canvas = faceapi.createCanvasFromMedia(video)
+            const canvas = await faceapi.createCanvasFromMedia(video)
             
             const displaySize = { width: video.width, height: video.height }
             faceapi.matchDimensions(canvas, displaySize)
