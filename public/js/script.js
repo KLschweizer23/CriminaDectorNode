@@ -28,7 +28,7 @@ async function start() {
     }
 }
 
-function checkIfMediaIsLoaded(){
+async function checkIfMediaIsLoaded(){
     if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
         window.navigator.mediaDevices.getUserMedia(
             { video:{} },
@@ -40,7 +40,7 @@ function checkIfMediaIsLoaded(){
         recognizeFaces() 
     }else{
         console.error('getUserMedia is not yet available')
-        setTimeout(checkIfMediaIsLoaded, 1000)
+        setTimeout(checkIfMediaIsLoaded, 2000)
     }
 }
 
