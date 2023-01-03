@@ -24,14 +24,18 @@ async function start() {
     $('#loadingModal').modal({ show: true })
     enableAutomaticDetection()
     if(await checkIfLoadModels()){
-        await window.navigator.mediaDevices.getUserMedia(
-            { video:{} },
-            stream => video.srcObject = stream,
-            err => console.error(err)
-        )
-            
-        console.log('video added')
-        recognizeFaces()
+        if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+            window.navigator.mediaDevices.getUserMedia(
+                { video:{} },
+                stream => video.srcObject = stream,
+                err => console.error(err)
+            )
+
+            console.log('video added')
+            recognizeFaces() 
+        }else{
+            console.error('getUserMedia is not available')
+        }
     }
 }
 
