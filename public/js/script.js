@@ -27,7 +27,7 @@ async function start() {
             { video:{} },
             async (stream) => {
                 console.log(await stream)
-                await video.srcObject = stream
+                video.srcObject = await stream
             },
             err => console.error(err)
         )
