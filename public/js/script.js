@@ -92,15 +92,18 @@ $('#myform').on('submit', ()=> {
     return true
 })
 async function recognizeFaces() {
-
+    console.log('loading images...')
     const labeledDescriptors = await loadLabeledImages()
     $('#loadingModal').modal('hide')
+    console.log('done loading images')
     if(labeledDescriptors == null){
         alert('No Criminals added to the database!')
         return
     }
+    console.log('loading facematcher...')
     const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55)
-    
+    console.log('done loading facematcher')
+    console.log(automateDetection)
     if(automateDetection){
         const canvas = faceapi.createCanvasFromMedia(video)
 
