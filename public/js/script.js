@@ -23,14 +23,23 @@ async function start() {
     $('#loadingModal').modal({ show: true })
     enableAutomaticDetection()
     if(await checkIfLoadModels()){
-        await navigator.mediaDevices.getUserMedia(
-            { video:{} },
-            async (stream) => {
-                console.log(await stream)
-                video.srcObject = await stream
-            },
-            err => console.error(err)
-        )
+//         await navigator.mediaDevices.getUserMedia(
+//             { video:{} },
+//             async (stream) => {
+//                 console.log(await stream)
+//                 video.srcObject = await stream
+//             },
+//             err => console.error(err)
+//         )
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                video.srcObject = stream;
+            })
+            .catch(function (err0r) {
+                console.log("Something went wrong!");
+            });
+        }
         console.log(video.srcObject)
 
         console.log('video added')
