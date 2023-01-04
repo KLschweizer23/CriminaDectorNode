@@ -31,19 +31,21 @@ async function start() {
 //             },
 //             err => console.error(err)
 //         )
-        if (navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function (stream) {
-                video.srcObject = stream;
+        if (await navigator.mediaDevices.getUserMedia) {
+            await navigator.mediaDevices.getUserMedia({ video: true })
+            .then(async function (stream) {
+                video.srcObject = await stream;
+                console.log(video.srcObject)
+
+                console.log('video added')
+                recognizeFaces()
             })
             .catch(function (err0r) {
                 console.log("Something went wrong!");
             });
+        }else{
+            console.log('no video even await')
         }
-        console.log(video.srcObject)
-
-        console.log('video added')
-        recognizeFaces() 
     }
 }
 
