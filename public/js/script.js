@@ -212,16 +212,30 @@ async function showResultInPopup(name){
         return data
     })
     document.getElementById("result_crimImage").src = data.url
-    $('#result_name').text(data.name)
+
+    var result = $('#result').text()
+    const regex = /\(([^)]+)\)/;
+    const match = regex.exec(result);
+    const percentage = match[1];
+
+    $('#result_name').text(data.name + " - " + percentage)
     $('#result_violation').text(data.violation)
     $('#result_description').text(data.description)
     $('#resultModal').modal({show: true})
 }
 
 async function sendReport(){
+    var result = $('#result').text()
+    const regex = /\(([^)]+)\)/
+    const match = regex.exec(result)
+    const percentage = match[1]
+    
+    const str = $('#result_name').text()
+    const parts = str.split(" - ")
+    const name = parts[0]; // "Ken Lloyd L. Billones"
+
     var address = $('#detectionAddress').val()
-    var name = $('#result_name').text()
-    $.post('/report', {address: address, name: name})
+    $.post('/report', {address: address, name: name, percentage: percentage})
     $('#resultModal').modal('hide')
 }
 

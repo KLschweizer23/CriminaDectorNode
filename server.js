@@ -235,9 +235,10 @@ app.get('/automate', (req, res) => {
 app.post('/report', express.json(), express.urlencoded(), (req, res) => {
     var name = req.body.name
     var address = req.body.address
+    var percentage = req.body.percentage
     
     var number = ['09384319457', '09466606292']
-    var message = 'Alert! Wanted Criminal, ' + name + ', has been spotted at ' + address + '.'
+    var message = 'Alert! Wanted Criminal, ' + name + ' with ' + percentage + ' probability, has been spotted at ' + address + '.'
     
     for(var i = 0; i < number.length; i++){
         sendMessage(number[i], message)
